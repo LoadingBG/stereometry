@@ -9,24 +9,28 @@ import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.SubScene;
-import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
+import loadingbg.stereometry.tools.DefaultTool;
+import loadingbg.stereometry.tools.Tool;
 
 public final class Space extends Group {
     private static final int MAX_ZOOM = 1000;
 
-    private final Group superGroup = new Group();
+    private Tool currentTool = new DefaultTool();
+
+    private final Group uiGroup = new Group();
     private final Group canvasGroup = new Group();
-    private final Group superLayout;
 
     private double anchorX;
     private double anchorY;
@@ -37,13 +41,11 @@ public final class Space extends Group {
 
     private final DoubleProperty zoom = new SimpleDoubleProperty(canvasGroup.getTranslateZ());
 
-    public Space(final Group superLayout, final int width, final int height) {
-        this.superLayout = superLayout;
+    public Space(final int width, final int height) {
+        uiGroup.getChildren().add(canvasGroup);
+        uiGroup.getChildren().add(new AmbientLight());
 
-        superGroup.getChildren().add(canvasGroup);
-        superGroup.getChildren().add(new AmbientLight());
-
-        final SubScene scene = new SubScene(superGroup, width, height, true, SceneAntialiasing.BALANCED);
+        final SubScene scene = new SubScene(uiGroup, width, height, true, SceneAntialiasing.BALANCED);
         scene.setFill(Color.GRAY);
 
         final Camera camera = new PerspectiveCamera();
@@ -80,34 +82,58 @@ public final class Space extends Group {
     }
 
     public void openMenu(final StereoShape shape) {
-        // TODO: finish
-        System.out.println("Opening popup for shape " + shape);
+        closeMenu();
 
         final VBox menu = new VBox();
 
         final HBox menuButtons = new HBox();
         menu.getChildren().add(menuButtons);
 
-        final Pane emptyPane = new Pane();
-        HBox.setHgrow(emptyPane, Priority.ALWAYS);
-        menuButtons.getChildren().add(emptyPane);
+        final Label titleLabel = new Label(getTitle(shape));
+        HBox.setHgrow(titleLabel, Priority.ALWAYS);
+        menuButtons.getChildren().add(titleLabel);
 
         final Button close = new Button("X");
-        close.setOnAction(event -> superLayout.getChildren().remove(menu));
+        close.setOnAction(event -> uiGroup.getChildren().remove(menu));
         menuButtons.getChildren().add(close);
-
-        final Accordion properties = new Accordion();
-        menu.getChildren().add(properties);
 
         final VBox generalMenu = new VBox();
 
-        properties.getPanes().addAll(
+        final HBox colorChooser = new HBox();
+        generalMenu.getChildren().add(colorChooser);
+
+        final Label colorLabel = new Label("Color:");
+        colorChooser.getChildren().add(colorLabel);
+
+        final Label colorDisplay = new Label();
+        colorDisplay.setMinWidth(10);
+        colorDisplay.setBackground(new Background(new BackgroundFill(Color.color(shape.color().getRed(), shape.color().getGreen(), shape.color().getBlue()), null, null)));
+        colorLabel.setLabelFor(colorChooser);
+        colorChooser.getChildren().add(colorDisplay);
+
+        menu.getChildren().addAll(
             new TitledPane("General", generalMenu)
         );
 
-        superLayout.getChildren().add(menu);
-        superLayout.layout();
-        //System.out.println(superLayout.getRight());
+        uiGroup.getChildren().add(menu);
+    }
+
+    public void closeMenu() {
+        uiGroup.getChildren().removeIf(VBox.class::isInstance);
+    }
+
+    private static String getTitle(final StereoShape shape) {
+        return shape.getClass().getSimpleName();
+    }
+
+    public void setTool(final Tool tool) {
+        currentTool = tool;
+    }
+
+    public void onClick(final StereoShape shape) {
+        if (currentTool.onMouseClick(shape, this)) {
+            setTool(new DefaultTool());
+        }
     }
 
     public void onMousePressed(final MouseEvent event) {

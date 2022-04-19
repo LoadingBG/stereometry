@@ -36,9 +36,7 @@ public final class Line extends StereoShape {
         );
 
         final Cylinder cylinder = new Cylinder(1, diff.magnitude());
-        cylinder.setOnMouseClicked(event -> {
-            System.out.println("Clicked");
-        });
+        cylinder.setOnMouseClicked(event -> onClick());
         return cylinder;
     }
 

@@ -12,6 +12,7 @@ public class Plane extends StereoShape {
     public Plane(final Space space, final Point3D... points) {
         super(space, points);
         updateView();
+        view.setOnMouseClicked(event -> onClick());
         prepareAndAdd(view);
     }
 

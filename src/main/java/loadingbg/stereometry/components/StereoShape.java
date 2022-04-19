@@ -3,6 +3,7 @@ package loadingbg.stereometry.components;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import javafx.geometry.Point3D;
 import javafx.scene.Parent;
@@ -27,10 +28,18 @@ public abstract class StereoShape extends Parent {
         return this;
     }
 
-    protected void prepareAndAdd(final Shape3D shape) {
+    protected final void onClick() {
+        space.onClick(this);
+    }
+
+    public final Color color() {
+        return material.getDiffuseColor();
+    }
+
+    protected final void prepareAndAdd(final Shape3D shape) {
         shape.setMaterial(material);
         shape.setCullFace(CullFace.NONE);
-        shape.setOnMouseClicked(event -> space.openMenu(this));
+        shape.setOnMouseClicked(event -> onClick());
         getChildren().add(shape);
     }
 
@@ -39,4 +48,17 @@ public abstract class StereoShape extends Parent {
     public abstract void addPoint(final Point3D point);
 
     public abstract boolean removePoint(final Point3D point);
+
+    @Override
+    public boolean equals(final Object o) {
+        if (o instanceof StereoShape other) {
+            return points.equals(other.points);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(points);
+    }
 }

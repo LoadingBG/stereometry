@@ -10,7 +10,13 @@ public final class Point extends StereoShape {
         translateYProperty().set(point.getY());
         translateZProperty().set(point.getZ());
 
-        prepareAndAdd(new Sphere(3));
+        final Sphere sphere = new Sphere(3);
+        sphere.setOnMouseClicked(event -> onClick());
+        prepareAndAdd(sphere);
+    }
+
+    public Point3D point() {
+        return points.get(0);
     }
 
     @Override
